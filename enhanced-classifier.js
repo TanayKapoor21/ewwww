@@ -2,13 +2,16 @@
 class WasteClassifier {
   constructor() {
     this.CLASSES = {
-      0: 'organic',
-      1: 'ewaste',
-      2: 'plastic',
-      3: 'paper',
-      4: 'metal',
-      5: 'glass',
-      6: 'hazardous'
+      0: {category: 'organic', subcategories: ['food', 'yard', 'compostable']},
+      1: {category: 'ewaste', subcategories: ['phones', 'computers', 'batteries', 'appliances']},
+      2: {category: 'plastic', subcategories: ['bottles', 'bags', 'containers', 'wrappers']},
+      3: {category: 'paper', subcategories: ['cardboard', 'newspaper', 'office', 'packaging']},
+      4: {category: 'metal', subcategories: ['cans', 'foil', 'scrap', 'electronics']},
+      5: {category: 'glass', subcategories: ['bottles', 'jars', 'broken', 'recyclable']},
+      6: {category: 'hazardous', subcategories: ['chemicals', 'medical', 'batteries', 'paint']},
+      7: {category: 'textile', subcategories: ['clothing', 'fabric', 'shoes', 'accessories']},
+      8: {category: 'construction', subcategories: ['wood', 'concrete', 'bricks', 'drywall']},
+      9: {category: 'mixed', subcategories: ['unrecyclable', 'contaminated', 'composite']}
     };
     this.model = null;
     this.currentWasteType = '';
