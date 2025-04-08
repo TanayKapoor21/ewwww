@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EWWWW - Enhanced Waste Scanner</title>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --secondary: #27ae60;
+      --bg-light: #f5f5f5;
+      --bg-dark: #222;
+      --text-light: #333;
+      --text-dark: #f5f5f5;
+      --card-light: white;
+      --card-dark: #333;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: all 0.3s ease;
+    }
+    
+    body.dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #7f8c8d;
+    }
+    
+    .scan-section {
+      text-align: center;
+      margin: 30px 0;
+    }
+    
+    .scan-btn {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .scan-btn:hover {
+      background-color: var(--secondary);
+      transform: scale(1.05);
+    }
+    
+    #imagePreviewContainer {
+      text-align: center;
+      margin: 20px 0;
+      min-height: 200px;
+    }
+    
+    #previewImage {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    #wasteType {
+      font-size: 24px;
+      margin-top: 15px;
+      font-weight: bold;
+      min-height: 30px;
+    }
+    
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .action-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      background-color: var(--primary);
+      color: white;
+    }
+    
+    .action-buttons button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+    
+    .card {
+      background-color: var(--card-light);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    
+    .dark-mode .card {
+      background-color: var(--card-dark);
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .popup.show {
+      display: flex;
+    }
+    
+    .popup-content {
+      background-color: var(--card-light);
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+    }
+    
+    .dark-mode .popup-content {
+      background-color: var(--card-dark);
+    }
+    
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #7f8c8d;
+      font-size: 14px;
+    }
+    
+    .placeholder {
+      width: 100%;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #bdc3c7;
+      border: 2px dashed #bdc3c7;
+      border-radius: 10px;
+    }
+  </style>
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+  <!-- Load our enhanced classifier -->
+  <script type="module" src="waste-classifier-v3.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>♻️ Enhanced Waste Scanner</h1>
+    <p class="subtitle">AI-Powered Waste Classification with Smart Tips</p>
+
+  <div class="scan-section">
+      <form id="uploadForm" onsubmit="return false;">
+        <input type="file" id="imageInput" accept="image/*" hidden>
+        <button type="button" class="scan-btn" onclick="document.getElementById('imageInput').click()">
+        <span>📸</span> Scan Waste
+      </button>
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p>Analyzing waste...</p>
+      </div>
+    </div>
+
+    <div id="imagePreviewContainer">
+      <div class="placeholder" id="imagePlaceholder">Image preview will appear here</div>
+      <img id="previewImage" src="" alt="Preview will appear here" style="display:none;">
+      <div id="wasteType"></div>
+      <div id="wasteDetails" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="action-buttons">
+      <button onclick="showEcoSuggestions()">💡 Random Eco Tip</button>
+      <button onclick="showBinLocations()">📍 Find Recycling</button>
+      <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+    </div>
+
+    <div class="info-cards">
+      <div class="card" onclick="showPopup('dispose')">♻️ Disposal Guide</div>
+      <div class="card" onclick="showPopup('upcycle')">🎨 Upcycle Ideas</div>
+      <div class="card" onclick="showPopup('toxic')">☠️ Toxicity Info</div>
+      <div class="card" onclick="showPopup('eco')">⭐ Eco Impact</div>
+    </div>
+
+    <div class="popup" id="popup">
+      <div class="popup-content">
+        <span class="close-btn" onclick="closePopup()">✖</span>
+        <div id="popupContent"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Powered by TensorFlow.js AI | Enhanced Waste Classification System</p>
+    </div>
+  </div>
+</body>
+<script>
+  // Dark Mode Toggle
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+  }
+
+  // Initialize dark mode from localStorage
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+  }
+
+  // Image Upload and Preview
+  const imageInput = document.getElementById('imageInput');
+  const previewImage = document.getElementById('previewImage');
+  const imagePlaceholder = document.getElementById('imagePlaceholder');
+  const wasteType = document.getElementById('wasteType');
+  const wasteDetails = document.getElementById('wasteDetails');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+
+  imageInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewImage.src = event.target.result;
+      previewImage.style.display = 'block';
+      imagePlaceholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+
+    // Show loading
+    loadingIndicator.style.display = 'flex';
+    wasteType.textContent = '';
+    wasteDetails.textContent = '';
+
+    // Classify image
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100)); // Let preview render
+      const classifier = await import('./waste-classifier-v3.js');
+      const results = await classifier.default.classify(previewImage);
+      
+      wasteType.textContent = `${getEmoji(results.category)} ${results.category}`;
+      wasteDetails.textContent = `Confidence: ${results.confidence}%`;
+    } catch (error) {
+      wasteType.textContent = '⚠️ Classification failed';
+      wasteDetails.textContent = error.message;
+    } finally {
+      loadingIndicator.style.display = 'none';
+    }
+  });
+
+  // Helper functions
+  function getEmoji(category) {
+    const emojis = {
+      'cardboard': '📦',
+      'glass': '🥃', 
+      'metal': '🔩',
+      'paper': '📄',
+      'plastic': '🥤',
+      'trash': '🗑️',
+      'unknown': '❓'
+    };
+    return emojis[category.toLowerCase()] || '♻️';
+  }
+
+  // Popup functionality
+  const popup = document.getElementById('popup');
+  const popupContent = document.getElementById('popupContent');
+
+  function showPopup(type) {
+    const content = {
+      'dispose': '<h2>♻️ Disposal Guide</h2><p>Proper disposal methods for this waste type...</p>',
+      'upcycle': '<h2>🎨 Upcycle Ideas</h2><p>Creative ways to reuse this material...</p>',
+      'toxic': '<h2>☠️ Toxicity Info</h2><p>Potential hazards and safety precautions...</p>',
+      'eco': '<h2>⭐ Eco Impact</h2><p>Environmental effects of this waste type...</p>'
+    }[type] || '<h2>Information</h2><p>Details not available</p>';
+    
+    popupContent.innerHTML = content;
+    popup.classList.add('show');
+  }
+
+  function closePopup() {
+    popup.classList.remove('show');
+  }
+
+  // Eco tips and bin locations (placeholder functions)
+  function showEcoSuggestions() {
+    const tips = [
+      "Use reusable bags instead of plastic",
+      "Compost food waste when possible",
+      "Recycle electronics properly",
+      "Choose products with less packaging"
+    ];
+    alert(`Eco Tip: ${tips[Math.floor(Math.random() * tips.length)]}`);
+  }
+
+  function showBinLocations() {
+    alert("📍 Finding nearest recycling bins...");
+  }
+</script>
+</html>
