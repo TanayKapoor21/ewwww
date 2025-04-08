@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EWWWW - AI Waste Scanner</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+      transition: background-color 0.3s;
+    }
+    body.dark-mode {
+      background-color: #222;
+      color: #f5f5f5;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #2ecc71;
+      text-align: center;
+    }
+    .scan-section {
+      text-align: center;
+      margin: 30px 0;
+    }
+    .scan-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .scan-btn:hover {
+      background-color: #27ae60;
+      transform: scale(1.05);
+    }
+    .icon {
+      margin-right: 10px;
+    }
+    #imagePreviewContainer {
+      text-align: center;
+      margin: 20px 0;
+    }
+    #previewImage {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    #wasteType {
+      font-size: 24px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .action-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .action-buttons button:hover {
+      transform: translateY(-3px);
+    }
+    .info-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 30px 0;
+    }
+    .card {
+      background-color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    .dark-mode .card {
+      background-color: #333;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    .popup.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .popup-content {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      position: relative;
+    }
+    .dark-mode .popup-content {
+      background-color: #333;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #7f8c8d;
+    }
+    .loading {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+    }
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #2ecc71;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+  <!-- Load our AI classifier -->
+  <script type="module" src="new-script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>♻️ Welcome to EWWWW</h1>
+    <p style="text-align: center;">AI-Powered Waste Classification System</p>
+
+    <div class="scan-section">
+      <input type="file" id="imageInput" accept="image/*" hidden>
+      <button class="scan-btn" onclick="document.getElementById('imageInput').click()">
+        <span class="icon">📸</span> Scan Waste
+      </button>
+      <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p>Analyzing waste...</p>
+      </div>
+    </div>
+
+    <div id="imagePreviewContainer">
+      <img id="previewImage" src="" alt="Preview will appear here">
+      <div id="wasteType" class="waste-type-title"></div>
+    </div>
+
+    <div class="action-buttons">
+      <button onclick="showEcoSuggestions()">💡 Eco Tips</button>
+      <button onclick="showBinLocations()">📍 Find Bins</button>
+      <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+    </div>
+
+    <div class="info-cards">
+      <div class="card" onclick="showPopup('dispose')">♻️ Disposal Guide</div>
+      <div class="card" onclick="showPopup('upcycle')">🎨 Upcycle Ideas</div>
+      <div class="card" onclick="showPopup('toxic')">☠️ Toxicity Info</div>
+      <div class="card" onclick="showPopup('eco')">⭐ Eco Impact</div>
+    </div>
+
+    <div class="popup" id="popup">
+      <div class="popup-content">
+        <span class="close-btn" onclick="closePopup()">✖</span>
+        <h3 id="popupTitle"></h3>
+        <div id="popupContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Powered by TensorFlow.js AI</p>
+  </div>
+</body>
+</html>
